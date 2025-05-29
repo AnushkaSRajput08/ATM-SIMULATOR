@@ -9,14 +9,13 @@
 #define PIN_LENGTH 4
 #define MAX_ATTEMPTS 3
 
-// Structure to store user account information
 struct Account {
     long long account_number;
     char pin[PIN_LENGTH + 1];
     double balance;
 };
 
-// Function declarations
+
 void clearScreen();
 void saveAccounts(struct Account *accounts, int count);
 int loadAccounts(struct Account *accounts);
@@ -28,14 +27,12 @@ void withdraw(struct Account *accounts, int currentUser);
 void checkBalance(struct Account *accounts, int currentUser);
 void changePin(struct Account *accounts, int currentUser);
 
-// Main function
 int main() {
     struct Account accounts[MAX_USERS];
     int userCount = 0;
     int currentUser = -1;
     int choice;
-    
-    // Load existing accounts from file
+
     userCount = loadAccounts(accounts);
     
     while (1) {
@@ -92,12 +89,10 @@ int main() {
     return 0;
 }
 
-// Function to clear screen
 void clearScreen() {
     system("cls");
 }
 
-// Function to save accounts to file
 void saveAccounts(struct Account *accounts, int count) {
     FILE *file = fopen("accounts.dat", "wb");
     if (file == NULL) {
@@ -108,7 +103,6 @@ void saveAccounts(struct Account *accounts, int count) {
     fclose(file);
 }
 
-// Function to load accounts from file
 int loadAccounts(struct Account *accounts) {
     FILE *file = fopen("accounts.dat", "rb");
     if (file == NULL) {
@@ -123,7 +117,6 @@ int loadAccounts(struct Account *accounts) {
     return count;
 }
 
-// Function to create new account
 void createNewAccount(struct Account *accounts, int *count) {
     clearScreen();
     printf("\n=== Create New Account ===\n");
@@ -160,7 +153,6 @@ void createNewAccount(struct Account *accounts, int *count) {
     getch();
 }
 
-// Function to handle login
 int login(struct Account *accounts, int count, int *currentUser) {
     clearScreen();
     printf("\n=== Login ===\n");
@@ -199,7 +191,6 @@ int login(struct Account *accounts, int count, int *currentUser) {
     return 0;
 }
 
-// Function to display menu
 void displayMenu() {
     clearScreen();
     printf("\n=== ATM Menu ===\n");
@@ -211,7 +202,6 @@ void displayMenu() {
     printf("\nEnter your choice: ");
 }
 
-// Function to handle deposits
 void deposit(struct Account *accounts, int currentUser) {
     clearScreen();
     printf("\n=== Deposit ===\n");
@@ -232,7 +222,6 @@ void deposit(struct Account *accounts, int currentUser) {
     getch();
 }
 
-// Function to handle withdrawals
 void withdraw(struct Account *accounts, int currentUser) {
     clearScreen();
     printf("\n=== Withdraw ===\n");
@@ -255,7 +244,6 @@ void withdraw(struct Account *accounts, int currentUser) {
     getch();
 }
 
-// Function to check balance
 void checkBalance(struct Account *accounts, int currentUser) {
     clearScreen();
     printf("\n=== Balance Inquiry ===\n");
@@ -264,7 +252,6 @@ void checkBalance(struct Account *accounts, int currentUser) {
     getch();
 }
 
-// Function to change PIN
 void changePin(struct Account *accounts, int currentUser) {
     clearScreen();
     printf("\n=== Change PIN ===\n");

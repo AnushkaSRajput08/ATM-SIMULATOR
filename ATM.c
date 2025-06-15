@@ -5,9 +5,18 @@
 #include <conio.h>
 #include <windows.h>
 
-#define MAX_USERS 100
+#define RED   "\033[0;31m"
+#define GREEN "\033[1;32m"
+#define RESET "\033[0m"
+#define MAX_USERS 20000
 #define PIN_LENGTH 4
 #define MAX_ATTEMPTS 3
+#define MAX_TRANSACTIONS 5
+#define MAX_TRANSACTION_LENGTH 100
+
+char transactionHistory[MAX_USERS][MAX_TRANSACTIONS][MAX_TRANSACTION_LENGTH];
+int transactionCount[MAX_USERS] = {0};
+
 
 struct Account {
     long long account_number;
@@ -15,7 +24,7 @@ struct Account {
     double balance;
 };
 
-
+int i=0;
 void clearScreen();
 void saveAccounts(struct Account *accounts, int count);
 int loadAccounts(struct Account *accounts);
@@ -26,6 +35,31 @@ void deposit(struct Account *accounts, int currentUser);
 void withdraw(struct Account *accounts, int currentUser);
 void checkBalance(struct Account *accounts, int currentUser);
 void changePin(struct Account *accounts, int currentUser);
+void addTransaction(int userIndex, const char *transaction) {
+    if (transactionCount[userIndex] < MAX_TRANSACTIONS) {
+        strcpy(transactionHistory[userIndex][transactionCount[userIndex]++], transaction);
+    } else {
+        for (i = 1; i < MAX_TRANSACTIONS; i++) {
+            strcpy(transactionHistory[userIndex][i - 1], transactionHistory[userIndex][i]);
+        }
+        strcpy(transactionHistory[userIndex][MAX_TRANSACTIONS - 1], transaction);
+    }
+}
+
+void printMiniStatement(int userIndex) {
+    clearScreen();
+    printf("\n=== Mini Statement ===\n");
+    if (transactionCount[userIndex] == 0) {
+        printf(RED"\nNo transactions yet.\n"RESET);
+    } else {
+        for (i = 0; i < transactionCount[userIndex]; i++) {
+            printf(GREEN"%d. %s\n"RESET, i + 1, transactionHistory[userIndex][i]);
+        }
+    }
+    printf("\nPress any key to continue...");
+    getch();
+}
+
 
 int main() {
     struct Account accounts[MAX_USERS];
@@ -68,8 +102,11 @@ int main() {
                                 changePin(accounts, currentUser);
                                 break;
                             case 5:
-                                currentUser = -1;
-                                goto main_menu;
+                                printMiniStatement(currentUser);
+                                break;
+                            case 6:
+                            	currentUser = -1;
+                            	goto main_menu;
                             default:
                                 printf("\nInvalid choice! Press any key to continue...");
                                 getch();
@@ -79,10 +116,10 @@ int main() {
                 main_menu:
                 break;
             case 3:
-                printf("\nThank you for using ATM Simulator!\n");
+                printf(GREEN"\nThank you for using ATM Simulator!\n"RESET);
                 return 0;
             default:
-                printf("\nInvalid choice! Press any key to continue...");
+                printf(RED"\nInvalid choice! Press any key to continue..."RESET);
                 getch();
         }
     }
@@ -96,7 +133,7 @@ void clearScreen() {
 void saveAccounts(struct Account *accounts, int count) {
     FILE *file = fopen("accounts.dat", "wb");
     if (file == NULL) {
-        printf("\nError saving accounts!");
+        printf(RED"\nError saving accounts!"RESET);
         return;
     }
     fwrite(accounts, sizeof(struct Account), count, file);
@@ -122,7 +159,7 @@ void createNewAccount(struct Account *accounts, int *count) {
     printf("\n=== Create New Account ===\n");
     
     if (*count >= MAX_USERS) {
-        printf("\nMaximum number of accounts reached!");
+        printf(RED"\nMaximum number of accounts reached!"RESET);
         printf("\nPress any key to continue...");
         getch();
         return;
@@ -148,7 +185,7 @@ void createNewAccount(struct Account *accounts, int *count) {
     
     saveAccounts(accounts, *count);
     
-    printf("\nAccount created successfully!");
+    printf(GREEN"\nAccount created successfully!"RESET);
     printf("\nPress any key to continue...");
     getch();
 }
@@ -163,8 +200,8 @@ int login(struct Account *accounts, int count, int *currentUser) {
     
     printf("\nEnter Account Number: ");
     scanf("%lld", &acc_num);
-    
-    for (int i = 0; i < count; i++) {
+    int i=0;
+    for (i = 0; i < count; i++) {
         if (accounts[i].account_number == acc_num) {
             while (attempts < MAX_ATTEMPTS) {
                 printf("Enter PIN: ");
@@ -176,9 +213,9 @@ int login(struct Account *accounts, int count, int *currentUser) {
                 }
                 
                 attempts++;
-                printf("\nIncorrect PIN! %d attempts remaining.\n", MAX_ATTEMPTS - attempts);
+                printf(RED"\nIncorrect PIN! %d attempts remaining.\n"RESET, MAX_ATTEMPTS - attempts);
             }
-            printf("\nToo many incorrect attempts! Account locked.");
+            printf(RED"\nToo many incorrect attempts! Account locked."RESET);
             printf("\nPress any key to continue...");
             getch();
             return 0;
@@ -198,7 +235,8 @@ void displayMenu() {
     printf("2. Withdraw\n");
     printf("3. Check Balance\n");
     printf("4. Change PIN\n");
-    printf("5. Logout\n");
+    printf("5. Mini Statement\n");
+    printf("6. Logout\n");
     printf("\nEnter your choice: ");
 }
 
@@ -211,13 +249,15 @@ void deposit(struct Account *accounts, int currentUser) {
     scanf("%lf", &amount);
     
     if (amount <= 0) {
-        printf("\nInvalid amount!");
+        printf(RED"\nInvalid amount!"RESET);
     } else {
         accounts[currentUser].balance += amount;
         saveAccounts(accounts, MAX_USERS);
-        printf("\nDeposit successful! New balance: $%.2f", accounts[currentUser].balance);
+        printf(GREEN"\nDeposit successful! New balance: $%.2f"RESET,accounts[currentUser].balance);
+        char log[100];
+        sprintf(log, "Deposited $%.2f", amount);
+        addTransaction(currentUser, log);
     }
-    
     printf("\nPress any key to continue...");
     getch();
 }
@@ -233,12 +273,15 @@ void withdraw(struct Account *accounts, int currentUser) {
     if (amount <= 0) {
         printf("\nInvalid amount!");
     } else if (amount > accounts[currentUser].balance) {
-        printf("\nInsufficient funds!");
+        printf(RED"\nInsufficient funds!",RESET);
     } else {
         accounts[currentUser].balance -= amount;
         saveAccounts(accounts, MAX_USERS);
-        printf("\nWithdrawal successful! New balance: $%.2f", accounts[currentUser].balance);
-    }
+        printf(GREEN"\nWithdrawal successful! New balance: $%.2f"RESET, accounts[currentUser].balance);
+        char log[100];
+        sprintf(log, "Withdrew $%.2f", amount);
+        addTransaction(currentUser, log);
+	}
     
     printf("\nPress any key to continue...");
     getch();
@@ -249,6 +292,9 @@ void checkBalance(struct Account *accounts, int currentUser) {
     printf("\n=== Balance Inquiry ===\n");
     printf("\nCurrent Balance: $%.2f", accounts[currentUser].balance);
     printf("\nPress any key to continue...");
+    char log[100];
+    sprintf(log, "Checked Balance: $%.2f", accounts[currentUser].balance);
+    addTransaction(currentUser, log);
     getch();
 }
 
@@ -270,13 +316,15 @@ void changePin(struct Account *accounts, int currentUser) {
             if (strlen(newPin) == PIN_LENGTH) {
                 strcpy(accounts[currentUser].pin, newPin);
                 saveAccounts(accounts, MAX_USERS);
-                printf("\nPIN changed successfully!");
-                break;
+                printf(GREEN"\nPIN changed successfully!"RESET);
+                addTransaction(currentUser, "Changed PIN");
+				break;
             }
             printf("\nPIN must be 4 digits!");
         }
+        
     } else {
-        printf("\nIncorrect current PIN!");
+        printf(RED"\nIncorrect current PIN!"RESET);
     }
     
     printf("\nPress any key to continue...");

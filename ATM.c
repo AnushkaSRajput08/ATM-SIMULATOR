@@ -8,7 +8,7 @@
 #define RED   "\033[0;31m"
 #define GREEN "\033[1;32m"
 #define RESET "\033[0m"
-#define MAX_USERS 20000
+#define MAX_USERS 30000
 #define PIN_LENGTH 4
 #define MAX_ATTEMPTS 3
 #define MAX_TRANSACTIONS 5

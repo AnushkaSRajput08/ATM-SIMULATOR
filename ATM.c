@@ -62,6 +62,7 @@ void printMiniStatement(int userIndex) {
 
 
 int main() {
+	system("color 1F");
     struct Account accounts[MAX_USERS];
     int userCount = 0;
     int currentUser = -1;
